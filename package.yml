@@ -1,0 +1,9 @@
+package: naju_rex_extensions
+version: '0.0.1'
+author: NAJU Sachsen
+supportpage: https://github.com/NAJU-Sachsen/rex-extensions
+requires:
+  redaxo: '^5.10'
+  php: '>=7.1'
+  packages:
+    naju_group_accounts: '>=0.0.1'
