@@ -21,6 +21,51 @@ class naju_kvs
     }
 
     /**
+     * Fetches the value associated with `$key` from the store.
+     *
+     * If there is no value associated with the key, it will be read from
+     * the database according to `$query`. The queried value will be put in
+     * the store afterwards.
+     *
+     * @param string $key
+     * @param string $query The database query to execute. It must result
+     *  in a single row with a single column.
+     * @param array $params An assoc array of named query parameters
+     * @return object
+     */
+    public static function getOrInflate($key, $query, $params = null)
+    {
+        $val = self::get($key);
+        if ($val) {
+            // If the value is already in the store simply return it
+            return $val;
+        } else {
+            // Otherwise fetch it from the database and put it in the store
+
+            $sql = rex_sql::factory()->setQuery($query, $params);
+            if ($sql->getRows() != 1) {
+                $error_details = $sql->getRows() ? 'a unique' : 'any';
+                throw new InvalidArgumentException("Query does not provide $error_details result: $query");
+            }
+
+            // we asserted that the query provided exactly one result, therefore it is safe to extract
+            // it directly
+            $data = $sql->getArray()[0];
+            if (sizeof($data) != 1) {
+                throw new InvalidArgumentException('The query result contains more than one column: ' . $query);
+            }
+
+            // we asserted that the result contains exactly one column, therefore we will simply extract it
+            $val = array_pop($data);
+
+            // store the fetched value in the kvs
+            self::put($key, $val);
+
+            return $val;
+        }
+    }
+
+    /**
      * Stores a new value. In case some other object was already associated
      * with `$key`, it will be returned or `null` otherwise.
      * 
