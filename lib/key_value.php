@@ -116,7 +116,13 @@ class naju_kvs
         }
 
         $serialized_store = rex_file::get(rex_path::addonCache(naju_rex_extensions::ADDON_NAME, 'kvs'));
-        self::$store = unserialize($serialized_store);
+
+        // if the storage file does not exist, create an empty store instead
+        if ($serialized_store) {
+            self::$store = unserialize($serialized_store);
+        } else {
+            self::$store = array();
+        }
 
         self::$initialized = true;
     }
