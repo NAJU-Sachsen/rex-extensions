@@ -6,6 +6,7 @@ class naju_article
     public const GROUP_ROOT_CATEGORY = 'Ortsgruppen';
     public const GROUP_PREFIX = 'NAJU ';
     public const DEFAULT_LOGO = 'naju-logo.png';
+    public const EMAIL_PATTERN = '/[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}/';
 
     /**
      * Searches for the name of the local group to which the currently requested article belongs.
@@ -80,6 +81,11 @@ class naju_article
             naju_kvs::put('logo.' . $logo_name, $file);
             return $file;
         }
+    }
+
+    public static function make_emails_anchors($text)
+    {
+        return preg_replace(self::EMAIL_PATTERN, '<a href="mailto:$0">$0</a>', $text);
     }
 
     /**
