@@ -22,7 +22,7 @@ class naju_article
 
         // firstly, check the KVS if there already is a group name stored
         // for the requested category
-        $kvs_group = naju_kvs::get('category.localgroup.' . $category);
+        $kvs_group = naju_kvs::get('category.localgroup.' . $category->getName());
         if ($kvs_group) {
             return $kvs_group;
         }
