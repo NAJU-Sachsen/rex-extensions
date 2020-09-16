@@ -47,7 +47,7 @@ class naju_article
         // finally, if we found the group, store it in the KVS, otherwise fall back to our default group
         if ($detected_group) {
             $group_name = self::dropLeadingPrefix($detected_group);
-            naju_kvs::put('category.localgroup.' . $category, $group_name);
+            naju_kvs::put('category.localgroup.' . $category->getName(), $group_name);
             return $group_name;
         } else {
             return self::DEFAULT_GROUP;
