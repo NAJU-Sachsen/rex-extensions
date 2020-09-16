@@ -20,6 +20,11 @@ class naju_article
         $detected_group = '';
         $category = rex_category::getCurrent();
 
+				// if we are on the root level, no group can be active
+				if (!$category) {
+					return self::DEFAULT_GROUP;
+				}
+
         // firstly, check the KVS if there already is a group name stored
         // for the requested category
         $kvs_group = naju_kvs::get('category.localgroup.' . $category->getName());
