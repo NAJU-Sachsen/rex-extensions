@@ -88,9 +88,16 @@ class naju_article
         }
     }
 
+		/**
+		 * Turns all email addresses in some text into hyperlink anchors.
+		 *
+		 * The remainder of the text will be escaped.
+		 *
+     * @ProducesHTML
+		 */
     public static function make_emails_anchors($text)
     {
-        return preg_replace(self::EMAIL_PATTERN, '<a href="mailto:$0">$0</a>', $text);
+        return preg_replace(self::EMAIL_PATTERN, '<a href="mailto:$0">$0</a>', rex_escape($text));
     }
 
     /**

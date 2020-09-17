@@ -14,6 +14,8 @@ class naju_navigation
 	 * Categories which are under the category which is currently active (i.e. to
 	 * which the currently displayed article belongs), will receive an extra
 	 * 'active' class.
+   *
+	 * @ProducesHTML
 	 */
 	public static function inflate_subnav($cat, $active_ids, $depth = 1)
 	{
@@ -30,7 +32,7 @@ class naju_navigation
 	            $subnav .= '<ul class="nav sub-nav flex-column">';
 	            foreach ($sub_cats as $sub_cat) {
 	                $is_subcat_active = in_array($sub_cat->getId(), $active_ids) ? 'active' : '';
-	                $subcat_name = htmlspecialchars($sub_cat->getValue('catname'));
+	                $subcat_name = rex_escape($sub_cat->getValue('catname'));
 
 	                $subnav .= '<li class="nav-item">';
 	                $subnav .= "<a href='{$sub_cat->getUrl()}' class='nav-link $is_subcat_active'>$subcat_name</a>";
