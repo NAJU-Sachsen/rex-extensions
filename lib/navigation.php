@@ -59,6 +59,11 @@ class naju_navigation
 		$active_ids = array();
 
 		$active_ids_collector = rex_category::getCurrent();
+
+		if (!$active_ids_collector) {
+			return $active_ids;
+    }
+
 		$active_ids[] = $active_ids_collector->getId();
 		while ($active_ids_collector = $active_ids_collector->getParent()) {
 				$active_ids[] = $active_ids_collector->getId();
