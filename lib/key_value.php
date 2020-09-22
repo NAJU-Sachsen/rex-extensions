@@ -107,6 +107,19 @@ class naju_kvs
     }
 
     /**
+     * Provides all the entries in this store as an assoc array [key => val].
+     * 
+     * The contents of this array should not be modified since changes are potentially reflected on the store's
+     * content but not tracked. I.e., they will not be written back to disk.
+     *
+     * @return array
+     */
+    public static function content()
+    {
+        return self::$store;
+    }
+
+    /**
      * Rebuilds the store from the addon cache. 
      */
     static function init()
@@ -121,6 +134,7 @@ class naju_kvs
         if ($serialized_store) {
             self::$store = unserialize($serialized_store);
         } else {
+            trigger_error('Creating new KVS store', E_USER_NOTICE);
             self::$store = array();
         }
 
@@ -143,7 +157,12 @@ class naju_kvs
         // reasons and will be re-populated eventually.
 
         $serialized_store = serialize(self::$store);
-        rex_file::put(rex_path::addonCache(naju_rex_extensions::ADDON_NAME, 'kvs'), $serialized_store);
+        $wrote_file = rex_file::put(rex_path::addonCache(naju_rex_extensions::ADDON_NAME, 'kvs'), $serialized_store);
+
+        if (!$wrote_file) {
+            trigger_error('Could not write KVS file', E_USER_WARNING);
+        }
+
     }
 
     /**
