@@ -37,12 +37,15 @@ class naju_image
     private $width;
     private $height;
     private $aspect_ratio;
+    private $rex_media;
 
     public function __construct($name)
     {
         if (!$name) {
             throw new InvalidArgumentException('Empty image name');
         }
+
+        $this->rex_media = rex_media::get($name);
 
         $this->path = rex_path::media($name);
 
@@ -107,6 +110,12 @@ class naju_image
     public function exactAspectRatio()
     {
         return $this->width / $this->height;
+    }
+
+    public function altText()
+    {
+        $med_alt = $this->rex_media->getValue('med_alt');
+        return $med_alt ? $med_alt : $this->rex_media->getTitle();
     }
 
     public function __toString()
