@@ -6,15 +6,15 @@ class naju_navigation
 	public const SUBNAV_DEPTH_LIMIT = 3;
 
 	/**
-   * Constructs a nav menu consisting of all the sub-categories under the given
+     * Constructs a nav menu consisting of all the sub-categories under the given
 	 * category.
-   *
+     *
 	 * The nav will be at most SUBNAV_DEPTH_LIMIT levels deep.
 	 *
 	 * Categories which are under the category which is currently active (i.e. to
 	 * which the currently displayed article belongs), will receive an extra
 	 * 'active' class.
-   *
+     *
 	 * @ProducesHTML
 	 */
 	public static function inflate_subnav($cat, $active_ids, $depth = 1)
@@ -22,8 +22,9 @@ class naju_navigation
 	    // for the currently active category we will display all sub-categories, too
 	    // if any of these categories is active, it will be styled accordingly
 
-			$subnav = '';
-	    $is_active = in_array($cat->getId(), $active_ids) ? 'active' : '';
+		$subnav = '';
+		$is_active = in_array($cat->getId(), $active_ids) ? 'active' : '';
+		$suppress_inactive_subcats = $cat->getValue('cat_suppress_subnav');
 
 	    if ($is_active) {
 	        $sub_cats = $cat->getChildren(true);
@@ -31,7 +32,12 @@ class naju_navigation
 	            $depth += 1;
 	            $subnav .= '<ul class="nav sub-nav flex-column">';
 	            foreach ($sub_cats as $sub_cat) {
-	                $is_subcat_active = in_array($sub_cat->getId(), $active_ids) ? 'active' : '';
+					$is_subcat_active = in_array($sub_cat->getId(), $active_ids) ? 'active' : '';
+					
+					if ($suppress_inactive_subcats && !$is_subcat_active) {
+						continue;
+					}
+
 	                $subcat_name = rex_escape($sub_cat->getValue('catname'));
 
 	                $subnav .= '<li class="nav-item">';
