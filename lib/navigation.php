@@ -24,7 +24,7 @@ class naju_navigation
 
 		$subnav = '';
 		$is_active = in_array($cat->getId(), $active_ids) ? 'active' : '';
-		$suppress_inactive_subcats = $cat->getValue('cat_suppress_subnav');
+		$suppress_inactive_subcats = $cat->getValue('cat_suppress_subnav') == '|true|';
 
 	    if ($is_active) {
 	        $sub_cats = $cat->getChildren(true);
@@ -34,7 +34,8 @@ class naju_navigation
 	            foreach ($sub_cats as $sub_cat) {
 					$is_subcat_active = in_array($sub_cat->getId(), $active_ids) ? 'active' : '';
 					
-					if ($suppress_inactive_subcats && !$is_subcat_active) {
+					if ($sub_cat->getValue('cat_ignore_nav') == '|true|' || ($suppress_inactive_subcats && !$is_subcat_active)) {
+						echo '<!-- skip category ' . $sub_cat->getValue('catname')  . ' -->';
 						continue;
 					}
 
