@@ -2,6 +2,8 @@
 
 class naju_image
 {
+    public const ALLOWED_TYPES = 'jpg,jpeg,png';
+
     public const ASPECT_RATIO_16_9 = 16 / 9;
     public const ASPECT_RATIO_4_3 = 4 / 3;
     public const ASPECT_RATIO_3_2 = 3 / 2;
@@ -62,19 +64,6 @@ class naju_image
 
         $this->width = $image_size[0];
         $this->height = $image_size[1];
-
-        $exact_ratio = $this->width / $this->height;
-        $ratio_found = false;
-        foreach (self::ASPECT_RATIOS as $ratio) {
-            if (naju_float::eq($exact_ratio, $ratio, 0.2)) {
-                $this->aspect_ratio = $ratio;
-                $ratio_found = true;
-                break;
-            }
-        }
-        if (!$ratio_found) {
-            $this->aspect_ratio = $exact_ratio;
-        }
     }
 
     public function name()
@@ -104,6 +93,25 @@ class naju_image
 
     public function aspectRatio()
     {
+        // compute the image's aspect ratio on demand
+
+        if ($this->aspect_ratio) {
+            return $this->aspect_ratio;
+        }
+
+        $exact_ratio = $this->width / $this->height;
+        $ratio_found = false;
+        foreach (self::ASPECT_RATIOS as $ratio) {
+            if (naju_float::eq($exact_ratio, $ratio, 0.2)) {
+                $this->aspect_ratio = $ratio;
+                $ratio_found = true;
+                break;
+            }
+        }
+        if (!$ratio_found) {
+            $this->aspect_ratio = $exact_ratio;
+        }
+
         return $this->aspect_ratio;
     }
 
