@@ -88,14 +88,35 @@ class naju_kvs
     }
 
     /**
-     * Deletes an entry from the store. If `$key` was in use, the
+     * Deletes an entry from the store. If **key** was in use, the
      * associated object will be returned or `null` otherwise.
+     *
+     * If **key** adhears to the format `foo.*.bar`, the wildcard will be expanded
+     * to delete entries witch exactly one component between `foo` and `bar`. Each component is built of letters, numbers and
+     * underscore whereas mutlitple components are separated by dots.
      *
      * @param string $key
      * @return object|null
      */
     public static function invalidate($key)
     {
+        // if the key contains wildcards, simply check for each key if it matches
+        if (str_contains($key, '*') && preg_match('/^([a-zA-Z0-9]+|\*)(\.([a-zA-Z0-9]+|\*))*$/', $key)) {
+            $key_pattern = str_replace('.', '\.', $key);
+            $key_pattern = str_replace('*', '[a-zA-Z0-9_]+', $key_pattern);
+            $key_pattern = '/^' . $key_pattern . '$/';
+            $vals = array();
+
+            foreach (array_keys(self::$store) as $k) {
+                $vals[] = self::$store[$k];
+                if (preg_match($key_pattern, $k)) {
+                    unset(self::$store[$k]);
+                }
+            }
+            self::markStoreDirty();
+            return $vals;
+        }
+
         $previous_val = self::get($key);
 
         if ($previous_val) {
