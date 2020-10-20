@@ -20,14 +20,14 @@ class naju_article
         $detected_group = '';
         $category = rex_category::getCurrent();
 
-				// if we are on the root level, no group can be active
-				if (!$category) {
-					return self::DEFAULT_GROUP;
-				}
+        // if we are on the root level, no group can be active
+        if (!$category) {
+            return self::DEFAULT_GROUP;
+        }
 
         // firstly, check the KVS if there already is a group name stored
         // for the requested category
-        $kvs_group = naju_kvs::get('category.localgroup.' . $category->getName());
+        $kvs_group = naju_kvs::get('category.localgroup.' . rex_string::normalize($category->getName()));
         if ($kvs_group) {
             return $kvs_group;
         }
@@ -47,7 +47,7 @@ class naju_article
         // finally, if we found the group, store it in the KVS, otherwise fall back to our default group
         if ($detected_group) {
             $group_name = self::dropLeadingPrefix($detected_group);
-            naju_kvs::put('category.localgroup.' . $category->getName(), $group_name);
+            naju_kvs::put('category.localgroup.' . rex_string::normalize($category->getName()), $group_name);
             return $group_name;
         } else {
             return self::DEFAULT_GROUP;
@@ -65,7 +65,7 @@ class naju_article
 
         // check the KVS if the logo was already requested and cached, otherwise do so manually
         $file = naju_kvs::get('logo.' . $logo_name);
-        echo "<!-- file $file -->";
+
         if ($file) {
             return $file;
         } else {
@@ -80,7 +80,7 @@ class naju_article
             } else {
                 // if some group matched, but it does not have a logo, use the default one as well
                 $group_logo = $group_logo[0];
-                $file = $group_logo['group_logo'] ?? self::DEFAULT_LOGO;
+                $file = $group_logo['group_logo'] ? $group_logo['group_logo'] : self::DEFAULT_LOGO;
             }
 
             naju_kvs::put('logo.' . $logo_name, $file);
@@ -88,13 +88,13 @@ class naju_article
         }
     }
 
-		/**
-		 * Turns all email addresses in some text into hyperlink anchors.
-		 *
-		 * The remainder of the text will be left as is.
-		 *
+    /**
+     * Turns all email addresses in some text into hyperlink anchors.
+     *
+     * The remainder of the text will be left as is.
+     *
      * @ProducesHTML
-		 */
+     */
     public static function make_emails_anchors($text)
     {
         return preg_replace(self::EMAIL_PATTERN, '<a href="mailto:$0">$0</a>', $text);
@@ -108,9 +108,11 @@ class naju_article
     {
         if (!$group) {
             return '';
+        } elseif (str_starts_with($group, self::GROUP_PREFIX)) {
+            return substr($group, strlen(self::GROUP_PREFIX));
+        } else {
+            return $group;
         }
-
-        return substr($group, strpos($group, self::GROUP_PREFIX)+strlen(self::GROUP_PREFIX));
     }
 
     /**
