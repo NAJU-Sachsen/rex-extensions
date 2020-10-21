@@ -33,7 +33,7 @@ class naju_kvs
      * @param array $params An assoc array of named query parameters
      * @return object
      */
-    public static function getOrInflate($key, $query, $params = null)
+    public static function getOrInflate($key, $query, $params = [])
     {
         $val = self::get($key);
         if ($val) {
