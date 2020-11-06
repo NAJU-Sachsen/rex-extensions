@@ -21,7 +21,7 @@ class naju_image
 
     public static function supportedFile($filename)
     {
-        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
         return rex_media::isImageType($extension) && !in_array($extension, self::UNSUPPORTED_EXTENSIONS);
     }
 
@@ -41,7 +41,7 @@ class naju_image
         }
     }
 
-    public static function createOptimizedVersions($img_name)
+    public static function createOptimizedVersions($img_name, $reuse = true)
     {
         $logger = rex_logger::factory();
 
@@ -69,12 +69,32 @@ class naju_image
                 return false;
         }
 
-        if ($rex_img->getWidth() > max(self::WIDTH_BREAKPOINTS) && $extension !== 'webp') {
-            $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN);
-            self::createWebp($img_name, $image, $rex_img, $xxl_webp_name);
+        if (!$image) {
+            $logger->log(E_WARNING, "Could not load image '$img_name'");
+            return false;
         }
 
-        $any_webp_created = false;
+        $failed_quality = 2 * self::COMPRESSION_QUALITY_INIT;
+        $created_quality = $failed_quality;
+
+        $needs_xxl = $rex_img->getWidth() > max(self::WIDTH_BREAKPOINTS);
+        $needs_xxs = $rex_img->getWidth() < min(self::WIDTH_BREAKPOINTS);
+        if (($needs_xxl || $needs_xxs) && $extension !== 'webp') {
+            $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename);
+            $res = self::createWebp($img_name, $image, $rex_img, $xxl_webp_name, $reuse);
+            if ($res) {
+                $created_quality = $res;
+            }
+        }
+
+        if ($needs_xxs && $res) {
+            imagedestroy($image);
+            return 'xxs;' . $res;
+        } elseif ($needs_xxs) {
+            imagedestroy($image);
+            return false;
+        }
+
         foreach (self::WIDTH_BREAKPOINTS as $width) {
 
             // if the uploaded image is narrower than the breakpoint don't create optimized version
@@ -89,14 +109,15 @@ class naju_image
             }
 
             $webp_name = sprintf(self::WEBP_FILENAME_PATTERN, $filename, $width);
-            $res = self::createWebp($img_name, $image, $rex_img, $webp_name);
+            $res = self::createWebp($img_name, $scaled, $rex_img, $webp_name, $reuse);
+
             if ($res) {
-                $any_webp_created = true;
+                $created_quality = min($res, $created_quality);
             }
         }
 
         imagedestroy($image);
-        return $any_webp_created;
+        return $created_quality == $failed_quality ? false : $created_quality;
     }
 
     public static function deleteOptimizedVersions($img_name)
@@ -114,11 +135,11 @@ class naju_image
     public static function updateOptimizedVersions($img_name)
     {
         self::deleteOptimizedVersions($img_name);
-        $res = self::createOptimizedVersions($img_name);
+        $res = self::createOptimizedVersions($img_name, false);
         return $res;
     }
 
-    public static function inflateOptimizedVersionsToMediapool()
+    public static function inflateOptimizedVersionsToMediapool($partitioning = null)
     {
         $sql = rex_sql::factory();
         $total = 0;
@@ -126,16 +147,26 @@ class naju_image
         $fail = array();
         $skipped = array();
 
-        $sql->setTable(rex::getTable('media'));
-        $sql->select('filename');
-        $media_files = $sql->getArray();
+        if ($partitioning) {
+            $media_count = $sql->setQuery('SELECT COUNT(*) AS count FROM ' . rex::getTable('media'))->getValue('count');
+            $offset = $partitioning['offset'] ?? 0;
+            $limit = $partitioning['limit'] ?? $media_count;
+            $media_files = $sql->getArray('SELECT filename FROM ' . rex::getTable('media') . " ORDER BY filename LIMIT $limit OFFSET $offset");
+        } else {
+            $sql->setTable(rex::getTable('media'));
+            $sql->select('filename');
+            $media_files = $sql->getArray();
+        }
+
         foreach ($media_files as $media) {
             $filename = $media['filename'];
             $total += 1;
             if (self::supportedFile($filename)) {
-                $res = self::updateOptimizedVersions($filename);
-                if ($res) {
-                    $success[] = $filename;
+                $res = self::createOptimizedVersions($filename);
+                if (str_contains($res, 'reuse') || $res === 'skipped') {
+                    $skipped[] = $filename . ' (' . $res . ')';
+                } elseif ($res) {
+                    $success[] = $filename . ' (' . $res . ')';
                 } else {
                     $fail[] = $filename;
                 }
@@ -146,10 +177,32 @@ class naju_image
         return ['total' => $total, 'success' => $success, 'failure' => $fail, 'skipped' => $skipped];
     }
 
-    private static function createWebp($img_name, $image, $rex_img, $webp_name)
+    public static function clearOptimizedVersionsFromMediapool()
+    {
+        set_time_limit(60 * 60);
+        ignore_user_abort(true);
+        $sql = rex_sql::factory();
+        $sql->setTable(rex::getTable('media'));
+        $sql->select('filename');
+        $media_files = $sql->getArray();
+
+        foreach ($media_files as $media) {
+            self::deleteOptimizedVersions($media['filename']);
+        }
+    }
+
+    private static function createWebp($img_name, $image, $rex_img, $webp_name, $reuse)
     {
         $logger = rex_logger::factory();
         $webp_path = rex_path::media($webp_name);
+
+        if ($reuse && file_exists($webp_path)) {
+            return 'reuse';
+        }
+
+        imagepalettetotruecolor($image);
+        imagealphablending($image, true);
+        imagesavealpha($image, true);
 
         $quality = self::COMPRESSION_QUALITY_INIT;
         $webp_created = imagewebp($image, $webp_path, $quality);
@@ -159,8 +212,10 @@ class naju_image
         }
 
         // as long as the converted image is larger than the original one, reduce the quality and try again
-        while (getimagesize($webp_path) > $rex_img->getSize() && $quality > self::COMPRESSION_QUALITY_THRESH) {
+        while (filesize($webp_path) > $rex_img->getSize() && $quality > self::COMPRESSION_QUALITY_THRESH) {
             $quality -= self::COMPRESSION_QUALITY_DEC;
+
+            @unlink($webp_path);
             $webp_created = imagewebp($image, $webp_path, $quality);
 
             // if an error occurred, don't try to create better converted images
@@ -172,11 +227,11 @@ class naju_image
 
         // although compression was set to its maximum, the WebP image still is not better than the original one
         // give up
-        if (getimagesize($webp_path) > $rex_img->getSize()) {
+        if (filesize($webp_path) > $rex_img->getSize()) {
             @unlink($webp_path);
             return false;
         } else {
-            return true;
+            return $quality;
         }
     }
 
@@ -277,7 +332,14 @@ class naju_image
     public function altText()
     {
         $med_alt = $this->rex_media->getValue('med_alt');
-        return $med_alt ? $med_alt : $this->rex_media->getTitle();
+        if ($med_alt) {
+            return $med_alt;
+        }
+        $title = $this->rex_media->getTitle();
+        if ($title) {
+            return $title;
+        }
+        return $this->name();
     }
 
     public function generateImgTag($classes = array(), $id = '', $attrs = [])
@@ -293,7 +355,9 @@ class naju_image
         $filename = pathinfo($this->path, PATHINFO_FILENAME);
         $webp_sources = array();
 
-        if ($this->rex_media->getWidth() > max(self::WIDTH_BREAKPOINTS)) {
+        $is_xxl = $this->rex_media->getWidth() > max(self::WIDTH_BREAKPOINTS);
+        $is_xxs = $this->rex_media->getWidth() < min(self::WIDTH_BREAKPOINTS);
+        if ($is_xxl || $is_xxs) {
             $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename);
             if (file_exists(rex_path::media($xxl_webp_name))) {
                 $webp_sources[] = rex_url::media($xxl_webp_name);

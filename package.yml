@@ -1,5 +1,5 @@
 package: naju_rex_extensions
-version: '0.1.0'
+version: '0.2.0'
 author: NAJU Sachsen
 supportpage: https://github.com/NAJU-Sachsen/rex-extensions
 requires:
@@ -9,7 +9,7 @@ requires:
     naju_group_accounts: '>=0.0.1'
 page:
   title: 'Extension Cockpit'
-  icon: rex-icon fa-pie-chart
+  icon: rex-icon fa-tachometer
   subpages:
     kvs:
         title: 'KVS'
