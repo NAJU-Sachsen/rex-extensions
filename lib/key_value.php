@@ -128,6 +128,17 @@ class naju_kvs
     }
 
     /**
+     * Drops all entries from the store.
+     *
+     * @return void
+     */
+    public static function clear()
+    {
+        self::$store = array();
+        self::markStoreDirty();
+    }
+
+    /**
      * Provides all the entries in this store as an assoc array [key => val].
      * 
      * The contents of this array should not be modified since changes are potentially reflected on the store's
