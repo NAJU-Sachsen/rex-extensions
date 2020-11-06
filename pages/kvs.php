@@ -2,35 +2,27 @@
 
 $func = rex_get('func', 'string', '');
 $funcs = ['kvs-clear'];
+$msg = '';
 
 if ($func === 'kvs-clear') {
     naju_kvs::clear();
-    $msg = '<p>KVS geleert</p>';
+    $msg .= '<p class="alert alert-info">KVS geleert</p>';
 }
 
-$msg = '';
-
-
-if ($msg) {
-    $fragment = new rex_fragment();
-    $fragment->setVar('title', 'Info' ,false);
-    $fragment->setVar('class', 'info', false);
-    $fragment->setVar('body', $msg, false);
-    echo $fragment->parse('core/page/section.php');
-}
+echo $msg;
 
 // provide KVS actions
 $fragment = new rex_fragment();
 
 $content = '';
 
-$content .= '<form method="get" action="' . rex_url::currentBackendPage(['func' => 'kvs-clear']) . '">';
+$content .= '<table class="table">';
 $content .= '
-    <div class="form-group">
-        <label for="webp-generate-btn">KVS leeren</label>
-        <button type="submit" class="btn btn-default">Ausführen</button>
-    </div>';
-$content .= '</form>';
+    <tr>
+        <th>KVS leeren</th>
+        <td><a href="' . rex_url::currentBackendPage(['func' => 'kvs-clear']) . '"> <i class="rex-icon fa-cogs"></i> ausführen</a><td>
+    <tr>';
+$content .= '</table>';
 
 $fragment->setVar('title', 'Kommandos' ,false);
 $fragment->setVar('class', 'edit', false);
@@ -52,11 +44,16 @@ $content = '
         </thead>
         <tbody>';
 
-$content .= '</tbody></table>';
-
 foreach (naju_kvs::content() as $key => $value) {
-    $content .= '<tr><td><code>' . rex_escape($key) . '</code></td><td>' . rex_escape($value) . '</td><td></td></tr>';
+    $content .= '
+        <tr>
+            <td><code>' . rex_escape($key) . '</code></td>
+            <td>' . rex_escape($value) . '</td>
+            <td></td>
+        </tr>';
 }
+
+$content .= '</tbody></table>';
 
 $fragment->setVar('title', 'KVS Inhalt' ,false);
 $fragment->setVar('class', 'edit', false);
