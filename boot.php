@@ -6,7 +6,7 @@ if (rex::isBackend() && rex::getUser()) {
 
     // create optimized versions of uploaded images
     rex_extension::register('MEDIA_ADDED', function ($ep) {
-        $file = $ep->getSubject()['filename'];
+        $file = $ep->getParam('filename');
         if (naju_image::supportedFile($file)) {
             naju_image::createOptimizedVersions($file);
         }
@@ -14,7 +14,7 @@ if (rex::isBackend() && rex::getUser()) {
 
     // also update optimzed versions when base image is updated
     rex_extension::register('MEDIA_UPDATED', function ($ep) {
-        $file = $ep->getSubject()['filename'];
+        $file = $ep->getParam('filename');
         if (naju_image::supportedFile($file)) {
             naju_image::updateOptimizedVersions($file);
         }
@@ -22,7 +22,7 @@ if (rex::isBackend() && rex::getUser()) {
 
     // delete optimized versions if base image is deleted
     rex_extension::register('MEDIA_DELETED', function ($ep) {
-        $file = $ep->getSubject()['filename'];
+        $file = $ep->getParam('filename');
         if (naju_image::supportedFile($file)) {
             naju_image::deleteOptimizedVersions($file);
         }
