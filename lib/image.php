@@ -275,6 +275,11 @@ class naju_image
         return $this->name;
     }
 
+    public function url()
+    {
+        return rex_url::media($this->name);
+    }
+
     public function path()
     {
         return $this->path;
@@ -340,6 +345,36 @@ class naju_image
             return $title;
         }
         return $this->name();
+    }
+
+    public function optimizedName()
+    {
+        $filename = pathinfo($this->name, PATHINFO_FILENAME);
+        $is_xxl = $this->rex_media->getWidth() > max(self::WIDTH_BREAKPOINTS);
+        $is_xxs = $this->rex_media->getWidth() < min(self::WIDTH_BREAKPOINTS);
+        if ($is_xxl || $is_xxs) {
+            $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename);
+            if (file_exists(rex_path::media($xxl_webp_name))) {
+                return $xxl_webp_name;
+            }
+        }
+
+        foreach (self::WIDTH_BREAKPOINTS as $width) {
+            $webp_name = sprintf(self::WEBP_FILENAME_PATTERN, $filename, $width);
+            if (file_exists(rex_path::media($webp_name))) {
+                return $webp_name;
+            }
+        }
+        return '';
+    }
+
+    public function optimizedUrl()
+    {
+        $opt_name = $this->optimizedName();
+        if ($opt_name) {
+            return rex_url::media($opt_name);
+        }
+        return '';
     }
 
     public function generateImgTag($classes = array(), $id = '', $attrs = [])
