@@ -2,7 +2,7 @@
 
 if (rex::isBackend() && rex::getUser()) {
 
-    // refuse upload if the image is too large
+    // if an image file is larger than 1.5 MB, it may not be uploaded
     rex_extension::register('MEDIA_ADD', function($ep) {
         $file = $ep->getParam('file');
         $file_name = $ep->getParam('filename');
