@@ -405,8 +405,12 @@ class naju_image
         $is_xxs = $this->rex_media->getWidth() < min(self::$WIDTH_BREAKPOINTS);
         if ($is_xxl || $is_xxs) {
             $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename);
-            if (file_exists(rex_path::media($xxl_webp_name))) {
-                $webp_sources[] = rex_url::media($xxl_webp_name);
+            $xxl_path = rex_path::media($xxl_webp_name);
+            if (file_exists($xxl_path)) {
+                $xxl_info = getimagesize($xxl_path);
+                if ($xxl_info) {
+                    $webp_sources[] = rex_url::media($xxl_webp_name) . ' ' . $xxl_info[0] . 'w';
+                }
             }
         }
 
