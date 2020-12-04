@@ -1,5 +1,5 @@
 package: naju_rex_extensions
-version: '0.3.0'
+version: '1.0.0'
 author: NAJU Sachsen
 supportpage: https://github.com/NAJU-Sachsen/rex-extensions
 requires:
@@ -10,6 +10,7 @@ requires:
 page:
   title: 'Extension Cockpit'
   icon: rex-icon fa-tachometer
+  perm: admin
   subpages:
     kvs:
         title: 'KVS'

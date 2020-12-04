@@ -5,12 +5,14 @@ class naju_image
     public const ALLOWED_TYPES = 'jpg,jpeg,png';
     public const UNSUPPORTED_EXTENSIONS = ['svg', 'tif', 'tiff'];
 
-    public const WIDTH_BREAKPOINTS = [1500, 1000, 800];
     public const WEBP_FILENAME_PATTERN = '%s_%sw___webp.webp';
     public const WEBP_XXL_FILENAME_PATTERN = '%s___webp.webp';
-    public const COMPRESSION_QUALITY_INIT = 100;
-    public const COMPRESSION_QUALITY_THRESH = 45;
-    public const COMPRESSION_QUALITY_DEC = 5;
+
+    public static $WIDTH_BREAKPOINTS = [1000, 800, 400];
+    public static $COMPRESSION_QUALITY_INIT = 100;
+    public static $COMPRESSION_QUALITY_THRESH = 45;
+    public static $COMPRESSION_QUALITY_DEC = 5;
+    public static $COMPRESSION_IMPROVEMENT_RATIO = 0.8;
 
     public const ASPECT_RATIO_16_9 = 16 / 9;
     public const ASPECT_RATIO_4_3 = 4 / 3;
@@ -74,11 +76,11 @@ class naju_image
             return false;
         }
 
-        $failed_quality = 2 * self::COMPRESSION_QUALITY_INIT;
+        $failed_quality = 2 * self::$COMPRESSION_QUALITY_INIT;
         $created_quality = $failed_quality;
 
-        $needs_xxl = $rex_img->getWidth() > max(self::WIDTH_BREAKPOINTS);
-        $needs_xxs = $rex_img->getWidth() < min(self::WIDTH_BREAKPOINTS);
+        $needs_xxl = $rex_img->getWidth() > max(self::$WIDTH_BREAKPOINTS);
+        $needs_xxs = $rex_img->getWidth() < min(self::$WIDTH_BREAKPOINTS);
         if (($needs_xxl || $needs_xxs) && $extension !== 'webp') {
             $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename);
             $res = self::createWebp($img_name, $image, $rex_img, $xxl_webp_name, $reuse);
@@ -95,7 +97,7 @@ class naju_image
             return false;
         }
 
-        foreach (self::WIDTH_BREAKPOINTS as $width) {
+        foreach (self::$WIDTH_BREAKPOINTS as $width) {
 
             // if the uploaded image is narrower than the breakpoint don't create optimized version
             if ($rex_img->getWidth() < $width) {
@@ -126,7 +128,7 @@ class naju_image
 
         $xxl_webp_path = rex_path::media(sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename));
         @unlink($xxl_webp_path);
-        foreach (self::WIDTH_BREAKPOINTS as $width) {
+        foreach (self::$WIDTH_BREAKPOINTS as $width) {
             $webp_path = rex_path::media(sprintf(self::WEBP_FILENAME_PATTERN, $filename, $width));
             @unlink($webp_path);
         }
@@ -204,7 +206,7 @@ class naju_image
         imagealphablending($image, true);
         imagesavealpha($image, true);
 
-        $quality = self::COMPRESSION_QUALITY_INIT;
+        $quality = self::$COMPRESSION_QUALITY_INIT;
         $webp_created = imagewebp($image, $webp_path, $quality);
         if (!$webp_created) {
             $logger->log(E_WARNING, "Could not create WebP image '$webp_name' from image '$img_name'");
@@ -212,8 +214,9 @@ class naju_image
         }
 
         // as long as the converted image is larger than the original one, reduce the quality and try again
-        while (filesize($webp_path) > $rex_img->getSize() && $quality > self::COMPRESSION_QUALITY_THRESH) {
-            $quality -= self::COMPRESSION_QUALITY_DEC;
+        while ((filesize($webp_path) > ($rex_img->getSize() * self::$COMPRESSION_IMPROVEMENT_RATIO))
+            && ($quality > self::$COMPRESSION_QUALITY_THRESH)) {
+            $quality -= self::$COMPRESSION_QUALITY_DEC;
 
             @unlink($webp_path);
             $webp_created = imagewebp($image, $webp_path, $quality);
@@ -350,8 +353,8 @@ class naju_image
     public function optimizedName($prefer_small = false)
     {
         $filename = pathinfo($this->name, PATHINFO_FILENAME);
-        $is_xxl = $this->rex_media->getWidth() > max(self::WIDTH_BREAKPOINTS);
-        $is_xxs = $this->rex_media->getWidth() < min(self::WIDTH_BREAKPOINTS);
+        $is_xxl = $this->rex_media->getWidth() > max(self::$WIDTH_BREAKPOINTS);
+        $is_xxs = $this->rex_media->getWidth() < min(self::$WIDTH_BREAKPOINTS);
         if ((!$prefer_small && $is_xxl) || $is_xxs) {
             $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename);
             if (file_exists(rex_path::media($xxl_webp_name))) {
@@ -360,10 +363,10 @@ class naju_image
         }
 
         if ($prefer_small) {
-            $breakpoints = self::WIDTH_BREAKPOINTS;
+            $breakpoints = self::$WIDTH_BREAKPOINTS;
             sort($breakpoints);
         } else {
-            $breakpoints = self::WIDTH_BREAKPOINTS;
+            $breakpoints = self::$WIDTH_BREAKPOINTS;
             rsort($breakpoints);
         }
 
@@ -387,8 +390,8 @@ class naju_image
 
     public function generateImgTag($classes = array(), $id = '', $attrs = [])
     {
-        $attr_class = $classes ? ('class="' . implode(' ', $classes) . '"') : '';
-        $attr_id = $id ? ('id="' . $id . '"') : '';
+        $attr_class = $classes ? ('class="' . rex_escape(implode(' ', $classes)) . '"') : '';
+        $attr_id = $id ? ('id="' . rex_escape($id) . '"') : '';
         $additional_attrs = self::attrsToStr($attrs);
         return '<img src="/media/' . $this->name . '" alt="' . rex_escape($this->altText()) . '" ' . $attr_id . ' ' . $attr_class . ' ' . $additional_attrs . '>';
     }
@@ -398,8 +401,8 @@ class naju_image
         $filename = pathinfo($this->path, PATHINFO_FILENAME);
         $webp_sources = array();
 
-        $is_xxl = $this->rex_media->getWidth() > max(self::WIDTH_BREAKPOINTS);
-        $is_xxs = $this->rex_media->getWidth() < min(self::WIDTH_BREAKPOINTS);
+        $is_xxl = $this->rex_media->getWidth() > max(self::$WIDTH_BREAKPOINTS);
+        $is_xxs = $this->rex_media->getWidth() < min(self::$WIDTH_BREAKPOINTS);
         if ($is_xxl || $is_xxs) {
             $xxl_webp_name = sprintf(self::WEBP_XXL_FILENAME_PATTERN, $filename);
             if (file_exists(rex_path::media($xxl_webp_name))) {
@@ -407,7 +410,7 @@ class naju_image
             }
         }
 
-        foreach (self::WIDTH_BREAKPOINTS as $width) {
+        foreach (self::$WIDTH_BREAKPOINTS as $width) {
             $webp_name = sprintf(self::WEBP_FILENAME_PATTERN, $filename, $width);
             if (file_exists(rex_path::media($webp_name))) {
                 $webp_sources[] = rex_url::media($webp_name) . ' ' . $width . 'w';

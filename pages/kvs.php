@@ -25,7 +25,6 @@ $content .= '
 $content .= '</table>';
 
 $fragment->setVar('title', 'Kommandos' ,false);
-$fragment->setVar('class', 'edit', false);
 $fragment->setVar('body', $content, false);
 echo $fragment->parse('core/page/section.php');
 
@@ -56,6 +55,5 @@ foreach (naju_kvs::content() as $key => $value) {
 $content .= '</tbody></table>';
 
 $fragment->setVar('title', 'KVS Inhalt' ,false);
-$fragment->setVar('class', 'edit', false);
 $fragment->setVar('body', $content, false);
 echo $fragment->parse('core/page/section.php');
