@@ -132,7 +132,7 @@ echo $fragment->parse('core/page/section.php');
 $fragment = new rex_fragment();
 $content = '';
 
-$img_breakpoints = $img_breakpoints ?? naju_image::$WIDTH_BREAKPOINTS;
+$img_breakpoints = $img_breakpoints ?? implode(';', naju_image::$WIDTH_BREAKPOINTS);
 $img_init_quality = $img_init_quality ?? naju_image::$COMPRESSION_QUALITY_INIT;
 $img_quality_thresh = $img_quality_thresh ?? naju_image::$COMPRESSION_QUALITY_THRESH;
 $img_quality_interval = $img_quality_interval ?? naju_image::$COMPRESSION_IMPROVEMENT_RATIO;

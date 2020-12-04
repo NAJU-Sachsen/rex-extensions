@@ -63,7 +63,7 @@ if (rex::isBackend() && rex::getUser()) {
 }
 
 // set the image properties for backend and frontend
-$img_breakpoints = explode(';', $this->getConfig('img_breakpoints'));
+$img_breakpoints = $this->getConfig('img_breakpoints');
 if ($img_breakpoints) {
-    naju_image::$WIDTH_BREAKPOINTS = $img_breakpoints;
+    naju_image::$WIDTH_BREAKPOINTS = explode(';', $img_breakpoints);
 }
