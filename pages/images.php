@@ -101,7 +101,7 @@ $content .= '
     </tr>
     <tr>
         <th>WebP Bilder entfernen</th>
-        <td class="text-right"><a href="' . rex_url::currentBackendPage(['func' => 'webp_clear']) . '"> <i class="rex-icon fa-cogs"></i> ausführen</a>&nbsp;<strong class="text text-warning">Das kann sehr lange dauern!</strong></td>
+        <td class="text-right"><a href="' . rex_url::currentBackendPage(['func' => 'webp_clear']) . '" onclick="return confirm(\'Wirklich entfernen?\')"> <i class="rex-icon fa-cogs"></i> ausführen</a>&nbsp;<strong class="text text-warning">Das kann sehr lange dauern!</strong></td>
     </tr>';
 $content .= '</table>';
 
@@ -135,7 +135,7 @@ $content = '';
 $img_breakpoints = $img_breakpoints ?? implode(';', naju_image::$WIDTH_BREAKPOINTS);
 $img_init_quality = $img_init_quality ?? naju_image::$COMPRESSION_QUALITY_INIT;
 $img_quality_thresh = $img_quality_thresh ?? naju_image::$COMPRESSION_QUALITY_THRESH;
-$img_quality_interval = $img_quality_interval ?? naju_image::$COMPRESSION_IMPROVEMENT_RATIO;
+$img_quality_interval = $img_quality_interval ?? naju_image::$COMPRESSION_QUALITY_DEC;
 $img_quality_improvement = $img_quality_improvement ?? naju_image::$COMPRESSION_IMPROVEMENT_RATIO;
 
 
