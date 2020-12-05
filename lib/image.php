@@ -428,7 +428,7 @@ class naju_image
         }
 
         $tag = '<picture>';
-        $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '"' . $source_attrs . '>';
+        $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '" ' . $source_attrs . '>';
         $tag .=     $this->generateImgTag($classes, $id, $attrs);
         $tag .= '</picture>';
         return $tag;
