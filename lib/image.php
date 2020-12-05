@@ -349,9 +349,20 @@ class naju_image
         return $this->name();
     }
 
-    public function optimizedName($prefer_small = false)
+    public function optimizedName($prefer_small = false, $breakpoint = null)
     {
         $filename = pathinfo($this->name, PATHINFO_FILENAME);
+
+        // if a breakpoint was explicitely specified, first try to fetch the corresponding media
+        if ($breakpoint) {
+            $break_file = sprintf(self::WEBP_FILENAME_PATTERN, $filename, $breakpoint);
+            if (file_exists(rex_path::media($break_file))) {
+                return $break_file;
+            }
+        }
+
+        // if the media was not found, or no breakpoint was specified, try to detect
+        // the appropriate source manually
         $is_xxl = $this->rex_media->getWidth() > max(self::$WIDTH_BREAKPOINTS);
         $is_xxs = $this->rex_media->getWidth() < min(self::$WIDTH_BREAKPOINTS);
         if ((!$prefer_small && $is_xxl) || $is_xxs) {
@@ -375,12 +386,13 @@ class naju_image
                 return $webp_name;
             }
         }
+
         return '';
     }
 
-    public function optimizedUrl($prefer_small = false)
+    public function optimizedUrl($prefer_small = false, $breakpoint = null)
     {
-        $opt_name = $this->optimizedName($prefer_small);
+        $opt_name = $this->optimizedName($prefer_small, $breakpoint);
         if ($opt_name) {
             return rex_url::media($opt_name);
         }
@@ -400,6 +412,7 @@ class naju_image
         $filename = pathinfo($this->path, PATHINFO_FILENAME);
         $webp_sources = array();
 
+        // first up, check if XXL or XXS versions need to be present in the `srcset`
         $is_xxl = $this->rex_media->getWidth() > max(self::$WIDTH_BREAKPOINTS);
         $is_xxs = $this->rex_media->getWidth() < min(self::$WIDTH_BREAKPOINTS);
         if ($is_xxl || $is_xxs) {
@@ -413,6 +426,7 @@ class naju_image
             }
         }
 
+        // secondly, collect all the avilable breakpoints
         foreach (self::$WIDTH_BREAKPOINTS as $width) {
             $webp_name = sprintf(self::WEBP_FILENAME_PATTERN, $filename, $width);
             if (file_exists(rex_path::media($webp_name))) {
@@ -420,6 +434,7 @@ class naju_image
             }
         }
 
+        // thirdly, determine the `size` attribute to use in the <source>
         if (!array_key_exists('sizes', $source_attrs)) {
             if (array_key_exists('width', $attrs)) {
                 $source_attrs['sizes'] = rex_escape($attrs['width']) . 'px';
@@ -433,6 +448,7 @@ class naju_image
         }
         $source_attrs = self::attrsToStr($source_attrs);
 
+        // finally, create the tag
         $tag = '<picture>';
         $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '" ' . $source_attrs . '>';
         $tag .=     $this->generateImgTag($classes, $id, $attrs);
