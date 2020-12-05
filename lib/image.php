@@ -396,7 +396,7 @@ class naju_image
         return '<img src="/media/' . $this->name . '" alt="' . rex_escape($this->altText()) . '" ' . $attr_id . ' ' . $attr_class . ' ' . $additional_attrs . '>';
     }
 
-    public function generatePictureTag($classes = array(), $id = '', $attrs = [])
+    public function generatePictureTag($classes = array(), $id = '', $attrs = [], $source_attrs = [])
     {
         $filename = pathinfo($this->path, PATHINFO_FILENAME);
         $webp_sources = array();
@@ -421,8 +421,14 @@ class naju_image
             }
         }
 
+        if ($source_attrs) {
+            $source_attrs = self::attrsToStr($source_attrs);
+        } else {
+            $source_attrs = '';
+        }
+
         $tag = '<picture>';
-        $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '">';
+        $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '"' . $source_attrs . '>';
         $tag .=     $this->generateImgTag($classes, $id, $attrs);
         $tag .= '</picture>';
         return $tag;
