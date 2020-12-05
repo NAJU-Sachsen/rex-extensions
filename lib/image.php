@@ -311,7 +311,6 @@ class naju_image
     public function aspectRatio()
     {
         // compute the image's aspect ratio on demand
-
         if ($this->aspect_ratio) {
             return $this->aspect_ratio;
         }
@@ -421,11 +420,18 @@ class naju_image
             }
         }
 
-        if ($source_attrs) {
-            $source_attrs = self::attrsToStr($source_attrs);
-        } else {
-            $source_attrs = '';
+        if (!array_key_exists('sizes', $source_attrs)) {
+            if (array_key_exists('width', $attrs)) {
+                $source_attrs['sizes'] = rex_escape($attrs['width']) . 'px';
+            } elseif (array_key_exists('height', $attrs)) {
+                $size_ratio = $attrs['height'] / $this->height();
+                $width = ceil($this->width() * $size_ratio);
+                $source_attrs['sizes'] = $width . 'px';
+            } else {
+                $source_attrs['sizes'] = '75vw';
+            }
         }
+        $source_attrs = self::attrsToStr($source_attrs);
 
         $tag = '<picture>';
         $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '" ' . $source_attrs . '>';
