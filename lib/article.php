@@ -7,6 +7,7 @@ class naju_article
     public const GROUP_PREFIX = 'NAJU ';
     public const DEFAULT_LOGO = 'naju-logo.png';
     public const EMAIL_PATTERN = '/[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}/';
+    public const LINK_PATTERN = '/http(s)?:\/\/[a-zA-Z0-9_\-\.%]+\.[a-zA-Z0-9_\-\.%]+([a-zA-Z0-9_\-\/])*(\.[a-zA-Z0-9_\-\.%]+)?(\?^[\s"\']+)?/';
 
     /**
      * Searches for the name of the local group to which the currently requested article belongs.
@@ -89,15 +90,49 @@ class naju_article
     }
 
     /**
+     * @see makeEmailsAnchors()
+     * @deprecated
+     */
+    public static function make_emails_anchors($text)
+    {
+        return self::makeEmailsAnchors($text);
+    }
+
+    /**
      * Turns all email addresses in some text into hyperlink anchors.
      *
      * The remainder of the text will be left as is.
      *
      * @ProducesHTML
      */
-    public static function make_emails_anchors($text)
+    public static function makeEmailsAnchors($text)
     {
         return preg_replace(self::EMAIL_PATTERN, '<a href="mailto:$0">$0</a>', $text);
+    }
+
+    /**
+     * Turns all links in some text into hyperlink anchors.
+     *
+     * The remainder of the text will be left as is.
+     *
+     * @ProducesHTML
+     */
+    public static function makeLinksAnchors($text)
+    {
+        return preg_replace(self::LINK_PATTERN, '<a href="$0">$0</a>', $text);
+    }
+
+    /**
+     * Enhances some `text` by turning all links and email addresses into proper
+     * hyperlinks.
+     *
+     * The reaminder of the text will be left as is.
+     *
+     * @ProducesHTML
+     */
+    public static function richFormatText($text)
+    {
+        return self::makeLinksAnchors(self::makeEmailsAnchors($text));
     }
 
     /**
