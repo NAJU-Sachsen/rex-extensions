@@ -410,7 +410,7 @@ class naju_image
     public function generatePictureTag($classes = array(), $id = '', $attrs = [], $source_attrs = [])
     {
         $filename = pathinfo($this->path, PATHINFO_FILENAME);
-        $webp_sources = array();
+        $webp_sources = array($this->url());
 
         // first up, check if XXL or XXS versions need to be present in the `srcset`
         $is_xxl = $this->rex_media->getWidth() > max(self::$WIDTH_BREAKPOINTS);
