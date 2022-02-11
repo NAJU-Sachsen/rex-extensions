@@ -404,7 +404,7 @@ class naju_image
         $attr_class = $classes ? ('class="' . rex_escape(implode(' ', $classes)) . '"') : '';
         $attr_id = $id ? ('id="' . rex_escape($id) . '"') : '';
         $additional_attrs = self::attrsToStr($attrs);
-        return '<img src="/media/' . $this->name . '" alt="' . rex_escape($this->altText()) . '" ' . $attr_id . ' ' . $attr_class . ' ' . $additional_attrs . '>';
+        return '<img src="' . $this->url() . '" alt="' . rex_escape($this->altText()) . '" ' . $attr_id . ' ' . $attr_class . ' ' . $additional_attrs . '>';
     }
 
     public function generatePictureTag($classes = array(), $id = '', $attrs = [], $source_attrs = [])
