@@ -399,6 +399,16 @@ class naju_image
         return '';
     }
 
+    public function author()
+    {
+        $med_author = $this->rex_media->getValue('med_author');
+        if ($med_author) {
+            return $med_author;
+        }
+        rex_logger::logError(E_USER_WARNING, 'Image ' . $this->name . ' has no author set', 'naju_image', 397);
+        return 'NAJU Sachsen';
+    }
+
     public function generateImgTag($classes = array(), $id = '', $attrs = [])
     {
         $attr_class = $classes ? ('class="' . rex_escape(implode(' ', $classes)) . '"') : '';
@@ -407,7 +417,7 @@ class naju_image
         return '<img src="' . $this->url() . '" alt="' . rex_escape($this->altText()) . '" ' . $attr_id . ' ' . $attr_class . ' ' . $additional_attrs . '>';
     }
 
-    public function generatePictureTag($classes = array(), $id = '', $attrs = [], $source_attrs = [])
+    public function generatePictureTag($classes = array(), $id = '', $attrs = [], $source_attrs = [], $with_author = true)
     {
         $filename = pathinfo($this->path, PATHINFO_FILENAME);
         $webp_sources = array($this->url());
@@ -448,11 +458,22 @@ class naju_image
         }
         $source_attrs = self::attrsToStr($source_attrs);
 
+        $tag = '';
+        if ($with_author) {
+            $tag .= '<figure class="clearfix">';
+        }
+
         // finally, create the tag
-        $tag = '<picture>';
-        $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '" ' . $source_attrs . '>';
+        $tag .= '<picture>';
+        $tag .= '   <source type="image/webp" srcset="' . implode(', ', $webp_sources) . '"' . $source_attrs . '>';
         $tag .=     $this->generateImgTag($classes, $id, $attrs);
         $tag .= '</picture>';
+
+        if ($with_author) {
+            $tag .= '<figcaption class="float-right mr-2">Foto: ' . rex_escape($this->author()) . '</figcaption>';
+            $tag .= '</figure>';
+        }
+
         return $tag;
     }
 
