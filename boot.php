@@ -16,13 +16,16 @@ if (rex::isBackend() && rex::getUser()) {
             return 'Die Datei ist zu groß. Maximal erlaubt: 1,5 MB';
         }
 
-        $sql = rex_sql::factory()
-            ->setTable('rex_media')
-            ->setWhere("originalname LIKE concat(:filename, '%')", ['filename' => pathinfo($file_name, PATHINFO_FILENAME)])
-            ->select('originalname');
+        $original_filename = pathinfo($ep->getParam('old_filename'), PATHINFO_FILENAME);
+        $existing_media_query = "SELECT originalname FROM rex_media WHERE originalname LIKE concat(:filename, '%')";
+        $sql = rex_sql::factory()->setQuery($existing_media_query, ['filename' => $original_filename]);
         $existing_files = $sql->getArray();
         if ($existing_files) {
-            return 'Datei mit ähnlichem Namen existiert bereits: ' . $existing_files[0]['orginalname'];
+            $conflicts = array();
+            foreach ($existing_files as $conflict) {
+                $conflicts[] = $conflict['originalname'];
+            }
+            return 'Datei mit ähnlichem Namen existiert bereits, bitte neue Datei umbenennen: ' . implode(',', $conflicts);
         }
 
         return '';
