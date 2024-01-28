@@ -8,11 +8,24 @@ if (rex::isBackend() && rex::getUser()) {
         $file_name = $ep->getParam('filename');
         $size = $file['size'];
 
-        if (naju_image::supportedFile($file_name) && $size > 1024 * 1024 * 1.5) { // 1024 (byte => KB) * 1024 (KB => MB) * 1.5 (MB => 1.5 MB)
-            return 'Die Datei ist zu groß. Maximal erlaubt: 1,5 MB';
-        } else {
-            return '';
+        if (!naju_image::supportedFile($file_name)) {
+            return 'Dateiformat nicht unterstützt' ;
         }
+
+        if ($size > 1024 * 1024 * 1.5) { // 1024 (byte => KB) * 1024 (KB => MB) * 1.5 (MB => 1.5 MB)
+            return 'Die Datei ist zu groß. Maximal erlaubt: 1,5 MB';
+        }
+
+        $sql = rex_sql::factory()
+            ->setTable('rex_media')
+            ->setWhere("originalname LIKE concat(:filename, '%')", ['filename' => pathinfo($file_name, PATHINFO_FILENAME)])
+            ->select('originalname');
+        $existing_files = $sql->getArray();
+        if ($existing_files) {
+            return 'Datei mit ähnlichem Namen existiert bereits: ' . $existing_files[0]['orginalname'];
+        }
+
+        return '';
     });
 
     // create optimized versions of uploaded images
