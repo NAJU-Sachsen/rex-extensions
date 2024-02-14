@@ -1,5 +1,5 @@
 package: naju_rex_extensions
-version: '1.0.4'
+version: '1.0.5'
 author: NAJU Sachsen
 supportpage: https://github.com/NAJU-Sachsen/rex-extensions
 requires:

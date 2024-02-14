@@ -3,13 +3,14 @@
 if (rex::isBackend() && rex::getUser()) {
 
     // if an image file is larger than 1.5 MB, it may not be uploaded
+    // likewise, files with existing names cannot be uploaded
     rex_extension::register('MEDIA_ADD', function($ep) {
         $file = $ep->getParam('file');
         $file_name = $ep->getParam('filename');
         $size = $file['size'];
 
         if (!naju_image::supportedFile($file_name)) {
-            return 'Dateiformat nicht unterstützt' ;
+            return '' ;
         }
 
         if ($size > 1024 * 1024 * 1.5) { // 1024 (byte => KB) * 1024 (KB => MB) * 1.5 (MB => 1.5 MB)
