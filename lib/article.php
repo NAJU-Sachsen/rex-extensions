@@ -192,16 +192,15 @@ class naju_article
         }
 
         $sql = rex_sql::factory();
-        $sql->setTable('naju_local_group')
-            ->setWhere('group_link IN (' . $sql->in($candidate_ids) . ')')
-            ->select('group_id, group_name');
-
+        $matching_groups_sql = <<<EOSQL
+            SELECT group_id, group_name
+            FROM naju_local_group
+            WHERE group_link IN (:candidates)
+            ORDER BY group_link
+        EOSQL;
+        $matching_groups_sql = str_replace(':candidates', $sql->in($candidate_ids), $matching_groups_sql);
+        $sql->setQuery($matching_groups_sql);
         $results = $sql->getArray();
-        if (count($results) > 1) {
-            // found multiple local groups -- this should never happen
-            rex_logger::factory()->error('Found multiple matching local groups for article', ['article' => $this->rex_art]);
-            return -1;
-        }
 
         $group_id = -1;
         if ($results) {
