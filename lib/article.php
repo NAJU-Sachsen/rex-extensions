@@ -157,4 +157,78 @@ class naju_article
     {
         return rex_string::normalize($group);
     }
+
+    public static function getCurrent() : naju_article
+    {
+        return new naju_article(rex_article::getCurrentId());
+    }
+
+    public static function get(int $id) : naju_article
+    {
+        return new naju_article($id);
+    }
+
+    private rex_article $rex_art;
+
+    protected function __construct($id)
+    {
+        $this->rex_art = rex_article::get($id);
+    }
+
+    public function getId() : int
+    {
+        return $this->rex_art->getId();
+    }
+
+    public function getLocalGroupId() : int
+    {
+        $candidate_ids = array();
+        foreach ($this->rex_art->getParentTree() as $parent_cat) {
+            $candidate_ids[] = $parent_cat->getId();
+        }
+
+        if (!$candidate_ids) {
+            return -1;
+        }
+
+        $sql = rex_sql::factory();
+        $sql->setTable('naju_local_group')
+            ->setWhere('group_link IN (' . $sql->in($candidate_ids) . ')')
+            ->select('group_id, group_name');
+
+        $results = $sql->getArray();
+        if (count($results) > 1) {
+            // found multiple local groups -- this should never happen
+            rex_logger::factory()->error('Found multiple matching local groups for article', ['article' => $this->rex_art]);
+            return -1;
+        }
+
+        $group_id = -1;
+        if ($results) {
+            $group_id = $results[0]['group_id'];
+        }
+
+        return $group_id;
+    }
+
+    public function updateArticleMetadata() : void
+    {
+        $group_id = $this->getLocalGroupId();
+
+        $group_name = 'NAJU Sachsen';
+        if ($group_id > 0) {
+            $group_name = rex_sql::factory()
+                ->setTable('naju_local_group')
+                ->setWhere(['group_id' => $group_id])
+                ->select('group_name')
+                ->getValue('group_name');
+        }
+
+        rex_sql::factory()
+            ->setTable('rex_article')
+            ->setWhere(['id' => $this->getId()])
+            ->setValue('art_local_group', $group_id)
+            ->setValue('art_group_name', $group_name)
+            ->update();
+    }
 }

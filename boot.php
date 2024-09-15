@@ -77,6 +77,12 @@ if (rex::isBackend() && rex::getUser()) {
         naju_image::$COMPRESSION_IMPROVEMENT_RATIO = $img_min_improvement;
     }
 
+    // When creating a new article, make sure to store its local group name and id in the metadata
+    rex_extension::register('ART_ADDED', function ($ep) {
+        $article = naju_article::get($ep->getParam('id'));
+        $article->updateArticleMetadata();
+    });
+
 }
 
 // set the image properties for backend and frontend

@@ -28,12 +28,13 @@ class naju_navigation
 
 	    if ($is_active) {
 	        $sub_cats = $cat->getChildren(true);
+
 	        if ($sub_cats) {
 	            $depth += 1;
 	            $subnav .= '<ul class="nav sub-nav flex-column">';
 	            foreach ($sub_cats as $sub_cat) {
 					$is_subcat_active = in_array($sub_cat->getId(), $active_ids) ? 'active' : '';
-					
+
 					if ($sub_cat->getValue('cat_ignore_nav') == '|true|' || ($suppress_inactive_subcats && !$is_subcat_active)) {
 						echo '<!-- skip category ' . $sub_cat->getValue('catname')  . ' -->';
 						continue;
@@ -54,7 +55,7 @@ class naju_navigation
 	        }
 	    }
 
-			return $subnav;
+		return $subnav;
 	}
 
 	/**
