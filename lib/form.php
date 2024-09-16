@@ -3,12 +3,12 @@
 class naju_form
 {
 
-    public static function multivalues2SQL($vals)
+    public static function multivalues2SQL(string $vals, string $prefix = '', string $suffix = ''): string
     {
         $val = ltrim($vals, '|');
         $val = rtrim($val, '|');
         $pure_vals = explode('|', $val);
-        return implode(',', $pure_vals);
+        return $prefix . implode(',', $pure_vals) . $suffix;
     }
 
 }
