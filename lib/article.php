@@ -7,7 +7,7 @@ class naju_article
     public const GROUP_PREFIX = 'NAJU ';
     public const DEFAULT_LOGO = 'naju-logo.png';
     public const EMAIL_PATTERN = '/[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}/';
-    public const LINK_PATTERN = '/http(s)?:\/\/[a-zA-Z0-9_\-\.%]+\.[a-zA-Z0-9_\-\.%]+([a-zA-Z0-9_\-\/])*(\.[a-zA-Z0-9_\-\.%]+)?(\?^[\s"\']+)?/';
+    public const LINK_PATTERN = '/http(s)?:\/\/[a-zA-Z0-9_\-\.%]+\.[a-zA-Z0-9_\-\.%]+([a-zA-Z0-9_\-\/%])*(\.[a-zA-Z0-9_\-\.%]+)?(\?^[\s"\']+)?/';
 
     /**
      * Searches for the name of the local group to which the currently requested article belongs.
